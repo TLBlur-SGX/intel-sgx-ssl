@@ -40,7 +40,6 @@
 #include "tdefines.h"
 #include "tSgxSSL_api.h"
 
-
 //#define DO_SGX_LOG
 #define DO_SGX_WARN
 

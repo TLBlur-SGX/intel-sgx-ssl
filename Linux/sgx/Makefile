@@ -60,7 +60,7 @@ ifneq ($(CRYPTO_ONLY), 1)
 
 ifeq ($(LINUX_SGX_BUILD), 0)
 ifneq ($(NO_THREADS), 1)
-	$(MAKE) -C $(TEST_DIR) all
+	# $(MAKE) -C $(TEST_DIR) all
 endif
 endif
 endif

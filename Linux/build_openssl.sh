@@ -133,18 +133,28 @@ echo $MITIGATION_OPT
 echo $MITIGATION_FLAGS
 echo $SPACE_OPT 
 
+TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
+export CC=/home/daan/tlblur/llvm/install/bin/clang 
+export CXX=/home/daan/tlblur/llvm/install/bin/clang++ 
+export CFLAGS=$TLBLUR_FLAGS 
+export CXXFLAGS=$TLBLUR_FLAGS
+
 sed -i -- 's/OPENSSL_issetugid/OPENSSLd_issetugid/g' $OPENSSL_VERSION/crypto/uid.c || exit 1
 cp rand_lib.c $OPENSSL_VERSION/crypto/rand/rand_lib.c || exit 1
 cp sgx_config.conf $OPENSSL_VERSION/ || exit 1
 cp x86_64-xlate.pl $OPENSSL_VERSION/crypto/perlasm/ || exit 1
 
 cd $SGXSSL_ROOT/../openssl_source/$OPENSSL_VERSION || exit 1
-perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-async no-padlockeng no-dso no-shared no-ssl3 no-md2 no-md4 no-ui-console no-stdio no-afalgeng -D_FORTIFY_SOURCE=2 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h || exit 1
+perl Configure --config=sgx_config.conf sgx-linux-x86_64 --with-rand-seed=none $ADDITIONAL_CONF $SPACE_OPT $MITIGATION_FLAGS no-idea no-mdc2 no-rc5 no-rc4 no-bf no-ec2m no-camellia no-cast no-srp no-async no-padlockeng no-dso no-shared no-ssl3 no-md2 no-md4 no-ui-console no-stdio no-afalgeng -D_FORTIFY_SOURCE=0 -DGETPID_IS_MEANINGLESS -include$SGXSSL_ROOT/../openssl_source/bypass_to_sgxssl.h -Wno-implicit-function-declaration -Wno-int-conversion || exit 1
 
 sed -i 's/ENGINE_set_default_RAND/dummy_ENGINE_set_default_RAND/' crypto/engine/tb_rand.c || exit 1
 sed -i 's/return RUN_ONCE(&locale_base, ossl_init_locale_base);/return 1;/' crypto/ctype.c || exit 1
 sed -i '/RAND_get0_private/,+1d'  crypto/rsa/rsa_sp800_56b_gen.c || exit 1
-make build_generated || exit 1
+# find . -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's/ strcat/ sgxssl_strcat/g' {} +
+# find . -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's/ strcpy/ sgxssl_strcpy/g' {} +
+# find . -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's/ readsocket/ sgxssl_read/g' {} +
+# find . -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's/ writesocket/ sgxssl_write/g' {} +
+make -j24 build_generated || exit 1
 
 if [[ "$MITIGATION_OPT" == "LOAD" ]]
 then
@@ -159,9 +169,10 @@ then
     rm -rf ../crypto
 fi
 
-make libcrypto.a || exit 1
+make -j24 libcrypto.a || exit 1
 cp libcrypto.a $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
 objcopy --rename-section .init=Q6A8dc14f40efc4288a03b32cba4e $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
+objcopy --rename-section .text=.tlblur.text $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
 cp include/openssl/* $SGXSSL_ROOT/package/include/openssl/ || exit 1
 grep OPENSSL_VERSION_STR include/openssl/opensslv.h > $SGXSSL_ROOT/sgx/osslverstr.h || exit 1
 cp -r include/crypto $SGXSSL_ROOT/sgx/test_app/enclave/ || exit 1

@@ -95,7 +95,7 @@ Sgx_tssl_S_Objects := $(addprefix $(OBJDIR)/, $(Sgx_tssl_S_Files:.S=.o))
 
 Sgx_tssl_Include_Paths := -I. -I$(PACKAGE_INC) -I$(SGX_SDK_INC) -I$(SGX_SDK_INC)/tlibc -I$(LIBCXX_INC)
 
-Common_C_Cpp_Flags := -DOS_ID=$(OS_ID) $(SGX_COMMON_CFLAGS) -nostdinc -fdata-sections -ffunction-sections -Os -Wl,--gc-sections -fvisibility=hidden -fpie -fpic -fstack-protector -fno-builtin-printf -Wformat -Wformat-security $(Sgx_tssl_Include_Paths)
+Common_C_Cpp_Flags := -DOS_ID=$(OS_ID) $(SGX_COMMON_CFLAGS) -nostdinc -Os -Wl,--gc-sections -fvisibility=hidden -fpie -fpic -fstack-protector -fno-builtin-printf -Wformat -Wformat-security $(Sgx_tssl_Include_Paths)
 Sgx_tssl_C_Flags := $(Common_C_Cpp_Flags) -Wno-implicit-function-declaration -std=c11 $(MITIGATION_CFLAGS) $(NO_THREADS_CFLAG)
 Sgx_tssl_Cpp_Flags := $(Common_C_Cpp_Flags) -std=c++11 -nostdinc++ $(MITIGATION_CFLAGS)
 ifeq ($(SKIP_INTELCPU_CHECK), TRUE)
@@ -105,6 +105,8 @@ endif
 $(shell mkdir -p $(OBJDIR))
 
 .PHONY: all run
+
+TRUSTED_LIB_TEMP := $(TRUSTED_LIB)_temp
 
 all: $(TRUSTED_LIB)
 
@@ -130,9 +132,13 @@ $(OBJDIR)/%.o : %.S
 	@echo "CC  <=  $<"
 
 $(TRUSTED_LIB): sgx_tsgxssl_t.c $(Sgx_tssl_Cpp_Objects) $(Sgx_tssl_C_Objects) $(Sgx_tssl_S_Objects)
-	ar rcs $(TRUSTED_LIB) $(Sgx_tssl_Cpp_Objects) $(Sgx_tssl_C_Objects) $(Sgx_tssl_S_Objects) 
+	ar rcs $@ $(Sgx_tssl_Cpp_Objects) $(Sgx_tssl_C_Objects) $(Sgx_tssl_S_Objects) 
 	@echo "LINK =>  $@"
-	@cp $@ $(PACKAGE_LIB)/$(TRUSTED_LIB)
+	@cp $@ $(PACKAGE_LIB)/$@
+
+# $(TRUSTED_LIB): $(TRUSTED_LIB_TEMP)
+# 	objcopy --rename-section .text=.tlblur.text $< $@
+# 	@echo "OBJCOPY =>  $@"
 
 clean:
 	@rm -f libsgx_tsgxssl.* libsgx_tsgxssld.* sgx_tsgxssl_t.* $(Sgx_tssl_Cpp_Objects) $(Sgx_tssl_C_Objects) $(Sgx_tssl_S_Objects)

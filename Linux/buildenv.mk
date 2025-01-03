@@ -1,4 +1,7 @@
 
+# CC = /home/daan/tlblur/llvm/install/bin/clang
+# CXX = /home/daan/tlblur/llvm/install/bin/clang++
+
 # Mitigation options
 MITIGATION_INDIRECT ?= 0
 MITIGATION_RET ?= 0
@@ -52,3 +55,4 @@ endif
 
 MITIGATION_CFLAGS += $(MITIGATION_ASFLAGS)
 
+# MITIGATION_CFLAGS += -mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline
