@@ -59,4 +59,7 @@ void SGXSSLSetUnreachableCodePolicy(UnreachableCodePolicy_t policy)
 	FEND;
 }
 
+void sgxssl_strcat() { SGX_WARNING("strcat isn't implemented\n"); }
+void sgxssl_strcpy() { SGX_WARNING("strcpy isn't implemented\n"); }
+
 }
