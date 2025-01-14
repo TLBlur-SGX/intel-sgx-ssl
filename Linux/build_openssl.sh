@@ -66,7 +66,12 @@ sed -i "/# define OPENSSL_assert/d" $OPENSSL_VERSION/include/openssl/crypto.h
 sed -i '/OPENSSL_die("assertion failed/d' $OPENSSL_VERSION/include/openssl/crypto.h
 fi
 
-OUTPUT_LIB=libsgx_tsgxssl_crypto.a
+if [ -z "$TLBLUR" ]; then
+    OUTPUT_LIB=libsgx_tsgxssl_crypto.a
+else
+    OUTPUT_LIB=libsgx_tsgxssl_crypto_tlblur.a
+fi
+
 if [[ "$*" == *"debug"* ]] ; then
 	OUTPUT_LIB=libsgx_tsgxssl_cryptod.a
     ADDITIONAL_CONF="-g "
@@ -133,11 +138,16 @@ echo $MITIGATION_OPT
 echo $MITIGATION_FLAGS
 echo $SPACE_OPT 
 
-TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
-export CC=/home/daan/tlblur/llvm/install/bin/clang 
-export CXX=/home/daan/tlblur/llvm/install/bin/clang++ 
-export CFLAGS=$TLBLUR_FLAGS 
-export CXXFLAGS=$TLBLUR_FLAGS
+if [ -z "$TLBLUR" ]; then
+    echo "compiling without TLBlur"
+else
+    echo "compiling with TLBlur"
+    TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
+    export CC=/home/daan/tlblur/llvm/install/bin/clang 
+    export CXX=/home/daan/tlblur/llvm/install/bin/clang++ 
+    export CFLAGS=$TLBLUR_FLAGS 
+    export CXXFLAGS=$TLBLUR_FLAGS
+fi
 
 sed -i -- 's/OPENSSL_issetugid/OPENSSLd_issetugid/g' $OPENSSL_VERSION/crypto/uid.c || exit 1
 cp rand_lib.c $OPENSSL_VERSION/crypto/rand/rand_lib.c || exit 1
@@ -168,7 +178,7 @@ fi
 make -j24 libcrypto.a || exit 1
 cp libcrypto.a $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
 objcopy --rename-section .init=Q6A8dc14f40efc4288a03b32cba4e $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
-objcopy --rename-section .text=.tlblur.text $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
+objcopy --rename-section .text=.tlblur.text $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB $SGXSSL_ROOT/package/lib64/$OUTPUT_LIB || exit 1
 cp include/openssl/* $SGXSSL_ROOT/package/include/openssl/ || exit 1
 grep OPENSSL_VERSION_STR include/openssl/opensslv.h > $SGXSSL_ROOT/sgx/osslverstr.h || exit 1
 cp -r include/crypto $SGXSSL_ROOT/sgx/test_app/enclave/ || exit 1
