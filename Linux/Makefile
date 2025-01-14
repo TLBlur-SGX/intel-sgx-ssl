@@ -54,14 +54,14 @@ sgxssl_no_mitigation:
 
 clean:
 	$(MAKE) -C sgx/ clean
-	# rm -rf $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_INC)/openssl/
-	# rm -rf $(PACKAGE_LIB)/cve_2020_0551_load
-	# rm -rf $(PACKAGE_LIB)/cve_2020_0551_cf
+	rm -rf $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_LIB)/$(OPENSSL_TLBLUR_LIB) $(PACKAGE_INC)/openssl/
+	rm -rf $(PACKAGE_LIB)/cve_2020_0551_load
+	rm -rf $(PACKAGE_LIB)/cve_2020_0551_cf
 
 test:
 	$(MAKE) -C sgx/ test
 
-install: $(PACKAGE_LIB)/$(TRUSTED_LIB) $(PACKAGE_LIB)/$(UNTRUSTED_LIB) $(PACKAGE_LIB)/$(OPENSSL_LIB)
+install: $(PACKAGE_LIB)/$(TRUSTED_LIB) $(PACKAGE_LIB)/$(UNTRUSTED_LIB) $(PACKAGE_LIB)/$(OPENSSL_LIB) $(PACKAGE_LIB)/$(OPENSSL_TLBLUR_LIB)
 ifeq ($(DEBUG), 1)
 	@echo "WARNING: Installing Debug libraries."
 endif

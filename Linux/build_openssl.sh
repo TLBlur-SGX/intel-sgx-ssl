@@ -143,8 +143,8 @@ if [ -z "$TLBLUR" ]; then
 else
     echo "compiling with TLBlur"
     TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
-    export CC=$PWD/../../../../llvm/install/bin/clang 
-    export CXX=$PWD/../../../../llvm/install/bin/clang++ 
+    export CC=$TLBLUR_LLVM/bin/clang 
+    export CXX=$TLBLUR_LLVM/bin/clang++ 
     export CFLAGS=$TLBLUR_FLAGS 
     export CXXFLAGS=$TLBLUR_FLAGS
 fi

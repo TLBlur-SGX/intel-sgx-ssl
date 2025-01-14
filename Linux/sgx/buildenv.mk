@@ -78,6 +78,7 @@ ifeq ($(DEBUG), 1)
 else
 	OBJDIR := release
 	OPENSSL_LIB := libsgx_tsgxssl_crypto.a
+	OPENSSL_TLBLUR_LIB := libsgx_tsgxssl_crypto_tlblur.a
 	TRUSTED_LIB := libsgx_tsgxssl.a
 	UNTRUSTED_LIB := libsgx_usgxssl.a
 endif
