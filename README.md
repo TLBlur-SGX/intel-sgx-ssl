@@ -1,3 +1,7 @@
+# Intel SGX SSL with TLBlur instrumentation [![DOI](https://zenodo.org/badge/911680942.svg)](https://doi.org/10.5281/zenodo.14645871)
+
+Original README below.
+
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/intel/intel-sgx-ssl/badge)](https://securityscorecards.dev/viewer/?uri=github.com/intel/intel-sgx-ssl)
 
 Intel® Software Guard Extensions SSL
