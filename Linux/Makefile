@@ -42,10 +42,10 @@ sgxssl:
 	@gcc -Wa,-mlfence-after-load=yes -c $(EMPTY_SRC).cpp 2> /dev/null \
 		|| (echo "Please follow the instruction at https://github.com/intel/linux-sgx/blob/master/README.md#build-the-intelr-sgx-sdk-and-intelr-sgx-psw-package to install \"mitigation tools\" first."  &&  exit 1)
 	@rm -rf $(EMPTY_SRC).*
-	$(MAKE) -C sgx/ clean
-	$(MAKE) -C sgx/ MITIGATION-CVE-2020-0551=LOAD
-	$(MAKE) -C sgx/ clean
-	$(MAKE) -C sgx/ MITIGATION-CVE-2020-0551=CF
+	# $(MAKE) -C sgx/ clean
+	# $(MAKE) -C sgx/ MITIGATION-CVE-2020-0551=LOAD
+	# $(MAKE) -C sgx/ clean
+	# $(MAKE) -C sgx/ MITIGATION-CVE-2020-0551=CF
 	$(MAKE) -C sgx/ clean
 	$(MAKE) -C sgx/ 
 
