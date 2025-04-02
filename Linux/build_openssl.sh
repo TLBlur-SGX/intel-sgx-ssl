@@ -55,6 +55,9 @@ cd $SGXSSL_ROOT/../openssl_source || exit 1
 rm -rf $OPENSSL_VERSION
 tar xvf $OPENSSL_VERSION.tar.gz || exit 1
 
+# apply patches to make OpenSSL work on our machine
+patch -p1 -d $OPENSSL_VERSION < openssl.patch
+
 # Remove AESBS to support only AESNI and VPAES
 sed -i '/BSAES_ASM/d' $OPENSSL_VERSION/Configure
 
@@ -138,16 +141,20 @@ echo $MITIGATION_OPT
 echo $MITIGATION_FLAGS
 echo $SPACE_OPT 
 
+export CC=$TLBLUR_LLVM/bin/clang 
+export CXX=$TLBLUR_LLVM/bin/clang++ 
+
+COMMON_FLAGS="-O3"
+
 if [ -z "$TLBLUR" ]; then
     echo "compiling without TLBlur"
 else
     echo "compiling with TLBlur"
     TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
-    export CC=$TLBLUR_LLVM/bin/clang 
-    export CXX=$TLBLUR_LLVM/bin/clang++ 
-    export CFLAGS=$TLBLUR_FLAGS 
-    export CXXFLAGS=$TLBLUR_FLAGS
 fi
+
+export CFLAGS="$COMMON_FLAGS $TLBLUR_FLAGS"
+export CXXFLAGS="$COMMON_FLAGS $TLBLUR_FLAGS"
 
 sed -i -- 's/OPENSSL_issetugid/OPENSSLd_issetugid/g' $OPENSSL_VERSION/crypto/uid.c || exit 1
 cp rand_lib.c $OPENSSL_VERSION/crypto/rand/rand_lib.c || exit 1

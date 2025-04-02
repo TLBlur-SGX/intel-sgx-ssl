@@ -1,0 +1,194 @@
+diff --color -ru orig/openssl-3.0.13/crypto/bio/bss_conn.c openssl-3.0.13/crypto/bio/bss_conn.c
+--- orig/openssl-3.0.13/crypto/bio/bss_conn.c	2024-01-30 14:28:16.000000000 +0100
++++ openssl-3.0.13/crypto/bio/bss_conn.c	2025-04-02 14:16:38.257690581 +0200
+@@ -323,31 +323,31 @@
+ static int conn_read(BIO *b, char *out, int outl)
+ {
+     int ret = 0;
+-    BIO_CONNECT *data;
++//     BIO_CONNECT *data;
+ 
+-    data = (BIO_CONNECT *)b->ptr;
+-    if (data->state != BIO_CONN_S_OK) {
+-        ret = conn_state(b, data);
+-        if (ret <= 0)
+-            return ret;
+-    }
++//     data = (BIO_CONNECT *)b->ptr;
++//     if (data->state != BIO_CONN_S_OK) {
++//         ret = conn_state(b, data);
++//         if (ret <= 0)
++//             return ret;
++//     }
+ 
+-    if (out != NULL) {
+-        clear_socket_error();
+-# ifndef OPENSSL_NO_KTLS
+-        if (BIO_get_ktls_recv(b))
+-            ret = ktls_read_record(b->num, out, outl);
+-        else
+-# endif
+-            ret = readsocket(b->num, out, outl);
+-        BIO_clear_retry_flags(b);
+-        if (ret <= 0) {
+-            if (BIO_sock_should_retry(ret))
+-                BIO_set_retry_read(b);
+-            else if (ret == 0)
+-                b->flags |= BIO_FLAGS_IN_EOF;
+-        }
+-    }
++//     if (out != NULL) {
++//         clear_socket_error();
++// # ifndef OPENSSL_NO_KTLS
++//         if (BIO_get_ktls_recv(b))
++//             ret = ktls_read_record(b->num, out, outl);
++//         else
++// # endif
++//             ret = readsocket(b->num, out, outl);
++//         BIO_clear_retry_flags(b);
++//         if (ret <= 0) {
++//             if (BIO_sock_should_retry(ret))
++//                 BIO_set_retry_read(b);
++//             else if (ret == 0)
++//                 b->flags |= BIO_FLAGS_IN_EOF;
++//         }
++//     }
+     return ret;
+ }
+ 
+diff --color -ru orig/openssl-3.0.13/crypto/bio/bss_sock.c openssl-3.0.13/crypto/bio/bss_sock.c
+--- orig/openssl-3.0.13/crypto/bio/bss_sock.c	2024-01-30 14:28:16.000000000 +0100
++++ openssl-3.0.13/crypto/bio/bss_sock.c	2025-04-02 14:16:42.613716139 +0200
+@@ -104,22 +104,22 @@
+ {
+     int ret = 0;
+ 
+-    if (out != NULL) {
+-        clear_socket_error();
+-# ifndef OPENSSL_NO_KTLS
+-        if (BIO_get_ktls_recv(b))
+-            ret = ktls_read_record(b->num, out, outl);
+-        else
+-# endif
+-            ret = readsocket(b->num, out, outl);
+-        BIO_clear_retry_flags(b);
+-        if (ret <= 0) {
+-            if (BIO_sock_should_retry(ret))
+-                BIO_set_retry_read(b);
+-            else if (ret == 0)
+-                b->flags |= BIO_FLAGS_IN_EOF;
+-        }
+-    }
++//     if (out != NULL) {
++//         clear_socket_error();
++// # ifndef OPENSSL_NO_KTLS
++//         if (BIO_get_ktls_recv(b))
++//             ret = ktls_read_record(b->num, out, outl);
++//         else
++// # endif
++//             ret = readsocket(b->num, out, outl);
++//         BIO_clear_retry_flags(b);
++//         if (ret <= 0) {
++//             if (BIO_sock_should_retry(ret))
++//                 BIO_set_retry_read(b);
++//             else if (ret == 0)
++//                 b->flags |= BIO_FLAGS_IN_EOF;
++//         }
++//     }
+     return ret;
+ }
+ 
+diff --color -ru orig/openssl-3.0.13/crypto/x86_64cpuid.pl openssl-3.0.13/crypto/x86_64cpuid.pl
+--- orig/openssl-3.0.13/crypto/x86_64cpuid.pl	2024-01-30 14:28:16.000000000 +0100
++++ openssl-3.0.13/crypto/x86_64cpuid.pl	2025-04-02 14:27:38.565560026 +0200
+@@ -78,7 +78,11 @@
+ 
+ 	xor	%eax,%eax
+ 	mov	%rax,8(%rdi)		# clear extended feature flags
+-	cpuid
++	movl \$0x00000020, %eax
++	movl \$0x756e6547, %ebx
++	movl \$0x6c65746e, %ecx
++	movl \$0x49656e69, %edx
++	# cpuid
+ 	mov	%eax,%r11d		# max value for standard query level
+ 
+ 	xor	%eax,%eax
+@@ -106,12 +110,14 @@
+ 
+ 	# AMD specific
+ 	mov	\$0x80000000,%eax
+-	cpuid
++  ud2
++	# cpuid
+ 	cmp	\$0x80000001,%eax
+ 	jb	.Lintel
+ 	mov	%eax,%r10d
+ 	mov	\$0x80000001,%eax
+-	cpuid
++  ud2
++	# cpuid
+ 	or	%ecx,%r9d
+ 	and	\$0x00000801,%r9d	# isolate AMD XOP bit, 1<<11
+ 
+@@ -119,12 +125,20 @@
+ 	jb	.Lintel
+ 
+ 	mov	\$0x80000008,%eax
+-	cpuid
++	movl \$0x00003934, %eax
++	movl \$0x00000200, %ebx
++	movl \$0x00000000, %ecx
++	movl \$0x00000000, %edx
++	# cpuid
+ 	movzb	%cl,%r10		# number of cores - 1
+ 	inc	%r10			# number of cores
+ 
+ 	mov	\$1,%eax
+-	cpuid
++	movl \$0x000806f8, %eax
++	movl \$0x06800800, %ebx
++	movl \$0x7ffefbff, %ecx
++	movl \$0xbfebfbff, %edx
++	# cpuid
+ 	bt	\$28,%edx		# test hyper-threading bit
+ 	jnc	.Lgeneric
+ 	shr	\$16,%ebx		# number of logical processors
+@@ -140,14 +154,22 @@
+ 
+ 	mov	\$4,%eax
+ 	mov	\$0,%ecx		# query L1D
+-	cpuid
++	movl \$0xfc004121, %eax
++	movl \$0x02c0003f, %ebx
++	movl \$0x0000003f, %ecx
++	movl \$0x00000000, %edx
++	# cpuid
+ 	mov	%eax,%r10d
+ 	shr	\$14,%r10d
+ 	and	\$0xfff,%r10d		# number of cores -1 per L1D
+ 
+ .Lnocacheinfo:
+ 	mov	\$1,%eax
+-	cpuid
++	movl \$0x000806f8, %eax
++	movl \$0x06800800, %ebx
++	movl \$0x7ffefbff, %ecx
++	movl \$0xbfebfbff, %edx
++	# cpuid
+ 	movd	%eax,%xmm0		# put aside processor id
+ 	and	\$0xbfefffff,%edx	# force reserved bits to 0
+ 	cmp	\$0,%r9d
+@@ -191,7 +213,11 @@
+ 	jb	.Lno_extended_info
+ 	mov	\$7,%eax
+ 	xor	%ecx,%ecx
+-	cpuid
++	movl \$0x00000002, %eax
++	movl \$0xf3bfb7ef, %ebx
++	movl \$0xfb417ffe, %ecx
++	movl \$0xffdd4432, %edx
++	# cpuid
+ 	bt	\$26,%r9d		# check XSAVE bit, cleared on Knights
+ 	jc	.Lnotknights
+ 	and	\$0xfff7ffff,%ebx	# clear ADCX/ADOX flag
