@@ -141,15 +141,17 @@ echo $MITIGATION_OPT
 echo $MITIGATION_FLAGS
 echo $SPACE_OPT 
 
-export CC=$TLBLUR_LLVM/bin/clang 
-export CXX=$TLBLUR_LLVM/bin/clang++ 
 
 COMMON_FLAGS="-O3"
 
 if [ -z "$TLBLUR" ]; then
     echo "compiling without TLBlur"
+    export CC=/usr/bin/gcc 
+    export CXX=/usr/bin/g++ 
 else
     echo "compiling with TLBlur"
+    export CC=$TLBLUR_LLVM/bin/clang 
+    export CXX=$TLBLUR_LLVM/bin/clang++ 
     TLBLUR_FLAGS="-mllvm -x86-tlblur-instrument -mllvm -x86-tlblur-inline -U_FORTIFY_SOURCE"
 fi
 
